@@ -6,21 +6,20 @@ import { useReportStore } from "../../../store/useReportStore";
 import secondaryLogo from "../../../../public/secondary-logo.svg";
 
 import "./index.css";
+import { useRouter } from "next/navigation";
 
-interface Props {
-  setIsScanning: (v: boolean) => void;
-}
-
-const Scanner: FC<Props> = ({ setIsScanning }) => {
+const Scanner: FC = () => {
   const photos = useReportStore((store) => store.photos);
 
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
+
+  const router = useRouter();
 
   useEffect(() => {
     const interval = setInterval(() => {
       const nextActiveIndex = activePhotoIndex + 1;
       if (nextActiveIndex >= photos.length) {
-        setIsScanning(false);
+        router.push("/results");
         return;
       }
 

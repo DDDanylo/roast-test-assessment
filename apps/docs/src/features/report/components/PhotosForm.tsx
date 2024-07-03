@@ -1,7 +1,6 @@
 "use client";
-import React, { FC } from "react";
+import React, { FC, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
 import {
   Form,
   FormControl,
@@ -10,21 +9,26 @@ import {
 } from "@repo/ui/components/ui/form";
 import { Button } from "@repo/ui/components/ui/button";
 
-import Dropzone from "../../../shared/components/Dropzone";
 import { useReportStore } from "../../../store/useReportStore";
 
+import PhotoCard, { ALLOWED_TYPES } from "./PhotoCard";
+
 const NUM_OF_PHOTOS = 6;
-const DEFAULT_VALUES = { files: new Array(NUM_OF_PHOTOS).fill(null) };
-const ALLOWED_TYPES = [{ name: "image", types: ["image/jpeg", "image/png"] }];
+const INIT_ARR = new Array(NUM_OF_PHOTOS).fill(null);
+const DEFAULT_VALUES = { files: INIT_ARR };
 
 interface FormValues {
   files: (File | null | undefined)[];
 }
 
-const PhotosForm: FC = () => {
-  const bulkSetImages = useReportStore((store) => store.bulkSetImages);
+interface Props {
+  setIsScanning: (v: boolean) => void;
+}
 
-  const router = useRouter();
+const PhotosForm: FC<Props> = ({ setIsScanning }) => {
+  const bulkSetImages = useReportStore((store) => store.bulkSetImages);
+  const fileUrls = useRef<(string | null)[]>(INIT_ARR);
+
   const form = useForm<FormValues>({
     defaultValues: DEFAULT_VALUES,
     shouldFocusError: true,
@@ -40,16 +44,21 @@ const PhotosForm: FC = () => {
       );
       if (!fileType) {
         newFiles[index] = null;
+        fileUrls.current[index] = null;
         form.setError(`files.${index}`, {
           message: "File type is not valid",
           type: "typeError",
         });
       } else {
         newFiles[index] = acceptedFiles[0];
+        fileUrls.current[index] = acceptedFiles[0]
+          ? URL.createObjectURL(acceptedFiles[0])
+          : null;
         form.clearErrors(`files.${index}`);
       }
     } else {
       newFiles[index] = null;
+      fileUrls.current[index] = null;
       form.setError(`files.${index}`, {
         message: "File is required",
         type: "typeError",
@@ -60,16 +69,25 @@ const PhotosForm: FC = () => {
 
   const onSubmit = (data: FormValues) => {
     bulkSetImages(data.files as File[]);
-    router.push("/results");
+    setIsScanning(true);
   };
 
   const files = form.watch("files");
+
+  useEffect(() => {
+    return () => {
+      // revoke all URLs on component unmount
+      fileUrls.current.forEach((url) => {
+        if (url) URL.revokeObjectURL(url);
+      });
+    };
+  }, []);
 
   return (
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-8 flex flex-col flex-1 justify-between items-center"
+        className="space-y-8 flex flex-col justify-between items-center grow"
       >
         <div className="grid grid-cols-2 xs:grid-cols-3 gap-4">
           {files.map((file, index) => (
@@ -80,13 +98,14 @@ const PhotosForm: FC = () => {
               render={({ field, fieldState }) => (
                 <FormItem className="w-full">
                   <FormControl>
-                    <Dropzone
+                    <PhotoCard
                       {...field}
                       value={file}
                       error={fieldState.error?.message}
                       handleOnDrop={(acceptedFiles) =>
                         handleOnDrop(index, acceptedFiles)
                       }
+                      fileUrl={fileUrls.current[index]} // Pass the file URL as a prop
                     />
                   </FormControl>
                 </FormItem>

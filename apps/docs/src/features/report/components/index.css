@@ -4,9 +4,14 @@
   }
   50% {
     top: 100%;
+    transform: scaleY(1);
+  }
+  51% {
+    transform: scaleY(-1);
   }
   100% {
     top: 0;
+    transform: scaleY(-1);
   }
 }
 

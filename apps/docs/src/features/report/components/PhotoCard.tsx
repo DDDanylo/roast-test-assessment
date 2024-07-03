@@ -12,11 +12,18 @@ import { Input } from "@repo/ui/components/ui/input";
 import { cn } from "@repo/ui/lib/utils";
 import { Button } from "@repo/ui/components/ui/button";
 
-import { useToast } from "../../../../../packages/ui/src/components/ui/use-toast";
+import { useToast } from "../../../../../../packages/ui/src/components/ui/use-toast";
 
-import UserIcon from "./icons/UserIcon";
-import CloseIcon from "./icons/CloseIcon";
-import PlusIcon from "./icons/PlusIcon";
+import UserIcon from "../../../shared/components/icons/UserIcon";
+import CloseIcon from "../../../shared/components/icons/CloseIcon";
+import PlusIcon from "../../../shared/components/icons/PlusIcon";
+
+export const ALLOWED_TYPES = [
+  { name: "image", types: ["image/jpeg", "image/png", "image/webp"] },
+];
+const ACCEPT_STR = ALLOWED_TYPES.flatMap((typeSet) =>
+  typeSet.types.map((type) => type),
+).join(", ");
 
 interface Props
   extends Omit<InputHTMLAttributes<HTMLInputElement>, "value" | "onChange"> {
@@ -24,12 +31,21 @@ interface Props
   error?: string;
   classNameWrapper?: string;
   className?: string;
+  fileUrl?: string | null;
   handleOnDrop: (acceptedFiles: FileList | null) => void;
 }
 
-const Dropzone: FC<Props> = forwardRef<HTMLDivElement, Props>(
+const PhotoCard: FC<Props> = forwardRef<HTMLDivElement, Props>(
   (
-    { value, error, classNameWrapper, className, handleOnDrop, ...props },
+    {
+      value,
+      error,
+      classNameWrapper,
+      className,
+      handleOnDrop,
+      fileUrl,
+      ...props
+    },
     ref,
   ) => {
     const { toast } = useToast();
@@ -82,13 +98,13 @@ const Dropzone: FC<Props> = forwardRef<HTMLDivElement, Props>(
       <div
         ref={ref}
         className={cn(
-          `w-[100px] h-[146px] bg-[#353535] bg-cover bg-no-repeat bg-center rounded-lg hover:cursor-pointer`,
+          `min-w-[100px] aspect-[3/5] bg-card-bg bg-cover bg-no-repeat bg-center rounded-lg hover:cursor-pointer`,
           { "border-2 border-dashed border-muted-foreground/50": !value },
           classNameWrapper,
         )}
         style={{
-          ...(value && {
-            backgroundImage: `url(${URL.createObjectURL(value)})`,
+          ...(fileUrl && {
+            backgroundImage: `url(${fileUrl})`,
           }),
         }}
       >
@@ -104,6 +120,7 @@ const Dropzone: FC<Props> = forwardRef<HTMLDivElement, Props>(
             value={undefined}
             ref={inputRef}
             type="file"
+            accept={ACCEPT_STR}
             className={cn("hidden", className)}
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
               handleOnDrop(e.target.files)
@@ -111,7 +128,7 @@ const Dropzone: FC<Props> = forwardRef<HTMLDivElement, Props>(
           />
           <Button
             type="button"
-            className={"p-0 w-7 h-7 absolute bottom-[-6px] right-[-6px]"}
+            className={"p-0 w-7 h-7 absolute -bottom-1.5 -right-1.5"}
             variant={value ? "muted" : "default"}
             onClick={value ? handleRemoveFile : handleButtonClick}
           >
@@ -123,4 +140,4 @@ const Dropzone: FC<Props> = forwardRef<HTMLDivElement, Props>(
   },
 );
 
-export default Dropzone;
+export default PhotoCard;

@@ -13,22 +13,24 @@ export interface UserCardData {
 }
 
 const UserCard: FC<UserCardData> = ({ meta, statistics, imageUrl }) => (
-  <Card className="p-4 mx-auto max-w-[342px] bg-transparent text-secondary-foreground ">
+  <Card className="p-4 mx-auto max-w-xs bg-transparent text-secondary-foreground ">
     <div className="flex gap-4">
       {imageUrl ? (
-        <Image
-          width={112}
-          height={158}
-          src={imageUrl}
-          alt="User pic"
-          className="rounded-lg"
-        />
+        <div className="w-[50%] relative pt-[60%]">
+          <Image
+            src={imageUrl}
+            alt="User pic"
+            fill
+            layout="cover"
+            className="w-full h-full top-0 left-0 object-cover rounded-xl"
+          />
+        </div>
       ) : (
         <div className="w-[112px] h-[158px] bg-primary rounded-lg" />
       )}
       <div className="mt-3">
         <p className="font-bold text-xl">Martha</p>
-        <div className="mt-[2px]">
+        <div className="mt-1">
           {meta?.map((data, i) => (
             <p className="mt-2 font-normal text-xs" key={i}>
               {data}
